@@ -4,15 +4,17 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
+
 class Ships(Dataset):
     """ship datasets with has ship labels
     Keyword Arguments:
         n_samples {int} -- items in dataset, here, items per epoch (default: {1000})
         pre_load {bool} -- to make all items at once and query for each step (default: {False})
-    
+
     Returns:
         sample {Tenosr} -- p_ship, x, y, yaw, h, w
     """
+
     def __init__(self, n_samples=1000, pre_load=False):
         self.n_samples = n_samples
         self.pre_load = pre_load
@@ -20,13 +22,12 @@ class Ships(Dataset):
             images, labels = make_batch(n_samples)
             # row, col -> n_channel,row,col
             inp = torch.tensor(images, dtype=torch.float32)
-            self.inps = inp[:,None, :, :]
+            self.inps = inp[:, None, :, :]
 
             # x,y,yaw,h,w -> p(ship),x,y,yaw,h,w
             target = torch.tensor(labels, dtype=torch.float32)
-            has_ship = (~torch.isnan(target[:,0])).float().reshape(-1,1)
+            has_ship = (~torch.isnan(target[:, 0])).float().reshape(-1, 1)
             self.targets = torch.cat((has_ship, target), dim=1)
-
 
     def __len__(self):
         return self.n_samples
@@ -34,7 +35,7 @@ class Ships(Dataset):
     def __getitem__(self, idx):
         if self.pre_load:
             inp = self.inps[idx]
-            target = self.targets[idx] 
+            target = self.targets[idx]
         else:
             image, label = make_data()
 
@@ -52,6 +53,8 @@ class Ships(Dataset):
         return sample
 
 # Used for simple experiment
+
+
 def make_batch(batch_size):
     """Used only when pre_load = True
 

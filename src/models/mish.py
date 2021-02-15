@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 
+
 @torch.jit.script
 def mish(input):
     '''
@@ -10,19 +11,20 @@ def mish(input):
     '''
     return input * torch.tanh(F.softplus(input))
 
+
 class Mish(torch.nn.Module):
     '''
     Source: https://github.com/digantamisra98/Mish/blob/master/Mish/Torch/mish.py
-    
+
     Applies the mish function element-wise:
     Shape:
         - Input: (N, *) where * means, any number of additional
           dimensions
         - Output: (N, *), same shape as the input
     '''
+
     def __init__(self):
         super().__init__()
 
     def forward(self, input):
         return mish(input)
-

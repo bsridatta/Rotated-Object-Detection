@@ -73,8 +73,8 @@ def _get_argparser():
     # device
     parser.add_argument('--cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
                         help='enable cuda if available')
-    parser.add_argument('--pin_memory', default = False, type = lambda x: (str(x).lower() == 'true'),
-                        help = 'pin memory to device')
+    parser.add_argument('--pin_memory', default=False, type=lambda x: (str(x).lower() == 'true'),
+                        help='pin memory to device')
     parser.add_argument('--seed', default=400, type=int,
                         help='random seed')
     return parser

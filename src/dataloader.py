@@ -16,6 +16,7 @@ def train_dataloader(opt):
     print("samples - ", len(dataset))
     return loader
 
+
 def val_dataloader(opt):
     print("[INFO]: Validation dataloader called")
     dataset = Ships(n_samples=opt.val_len)
@@ -30,6 +31,7 @@ def val_dataloader(opt):
     print("samples - ", len(dataset))
     return loader
 
+
 def test_dataloader(opt):
     print("[INFO]: Test dataloader called")
     dataset = Ships(n_samples=opt.test_len)
@@ -42,4 +44,4 @@ def test_dataloader(opt):
                         sampler=sampler,
                         shuffle=shuffle)
     print("samples - ", len(dataset))
-    return loader 
+    return loader

@@ -14,7 +14,7 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     Keyword Arguments:
         iou_threshold {float} -- predicted bbox is correct if IOU > this value (default: {0.7})
         pr_score {float} -- object conf. threshold to sample precision and recall (default: {0.5})
-    
+
     Returns:
         precision, recall, F1 @ pr_score, AP@ iou_threshold and mean IOU
 
@@ -43,7 +43,7 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     mean_iou = torch.mean(ious)
 
     # Calcualted Precision, Recall, F1, AP
-    #### sort by conf
+    # sort by conf
     sorted_idx = torch.argsort(conf, dim=0, descending=True)
     tp, conf = tp[sorted_idx], conf[sorted_idx]
 
@@ -59,11 +59,11 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     rec = tpc / sum_tp_fn
 
     # One P, R at conf threshold
-    #### -1 as conf decreases along x
+    # -1 as conf decreases along x
     p = torch.tensor(np.interp(-pr_score, -conf.cpu(), prec[:, 0].cpu()))
     r = torch.tensor(np.interp(-pr_score, -conf.cpu(), rec[:, 0].cpu()))
 
-    ap = compute_ap(list(rec),list(prec))
+    ap = compute_ap(list(rec), list(prec))
 
     f1 = 2 * p * r / (p + r + eps)
 
@@ -72,10 +72,10 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
 
 def compute_ap(recall, precision):
     """ Compute the average precision, given the recall and precision curves.
-   
+
     Code Source: 
         unmodified - https://github.com/rbgirshick/py-faster-rcnn.
-   
+
     Reference: 
         https://github.com/ultralytics/yolov3/blob/e0a5a6b411cca45f0d64aa932abffbf3c99b92b3/test.py
 
@@ -87,7 +87,8 @@ def compute_ap(recall, precision):
     """
 
     # Append sentinel values to beginning and end
-    mrec = np.concatenate(([0.], recall, [min(recall[-1] + 1E-3, 1.)])).astype('float')
+    mrec = np.concatenate(
+        ([0.], recall, [min(recall[-1] + 1E-3, 1.)])).astype('float')
     mpre = np.concatenate(([0.], precision, [0.]))
 
     # Compute the precision envelope

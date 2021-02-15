@@ -11,6 +11,7 @@ class Detector_ORN(nn.Module):
     Advatages - better IOU, fewer parameters, faster convergence, should be ideal for the task
     ORN paper - https://arxiv.org/pdf/1701.01833.pdf
     """
+
     def __init__(self):
         super(Detector_ORN, self).__init__()
         self.image_size = 200

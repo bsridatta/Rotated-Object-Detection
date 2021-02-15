@@ -1,0 +1,15 @@
+# dot files
+.vscode
+
+# cache
+__pycache__/
+.pytest_cache
+
+# packaging
+*.egg-info/
+
+# logs
+wandb/
+
+
+

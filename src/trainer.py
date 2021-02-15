@@ -45,7 +45,7 @@ def validation_epoch(cb, opt, model, val_loader):
     f1 = []
     ap = []
     iou = []
-    l_ship =[] 
+    l_ship = []
     l_bbox = []
 
     with torch.no_grad():
@@ -56,10 +56,10 @@ def validation_epoch(cb, opt, model, val_loader):
             # validation step
             input, target = batch['input'], batch['target']
             output = model(input)
-            
+
             loss, _l_ship, _l_bbox = compute_loss(output, target)
-            _prec, _rec, _f1, _ap, _iou = compute_metrics(output, target)            
- 
+            _prec, _rec, _f1, _ap, _iou = compute_metrics(output, target)
+
             # append incase analysis of distribution is of interest
             losses.append(loss)
             l_ship.append(_l_ship)

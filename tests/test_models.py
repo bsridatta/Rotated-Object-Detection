@@ -2,9 +2,11 @@ import pytest
 import torch
 from src import models
 
+
 @pytest.fixture
 def random():
     torch.manual_seed(0)
+
 
 def test_models():
 

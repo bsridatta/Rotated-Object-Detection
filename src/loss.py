@@ -1,12 +1,13 @@
 import torch
 
+
 def compute_loss(pred, target):
     """Compute loss handling no ships
 
     Arguments:
         pred {Tensor Batch} -- p(ship), x, y, yaw, w, h
         target {Tensor Batch} -- p(ship), x, y, yaw, w, h
-   
+
     Returns:
         loss -- list of all - not averaged
     """
@@ -21,9 +22,9 @@ def compute_loss(pred, target):
 
     l_ship = torch.nn.functional.binary_cross_entropy_with_logits(
         pred[:, 0], target[:, 0], reduction='none')
-    
+
     loss = l_ship + l_bbox
-    
+
     return loss, l_ship, l_bbox
 
 

@@ -42,7 +42,7 @@ def test_compute_metrics():
                            ], requires_grad=True)
 
     prec, rec, f1, ap, iou = compute_metrics(pred, target, pr_score=0.5)
-    assert isinstance (prec, torch.Tensor)
+    assert isinstance(prec, torch.Tensor)
     # assert tp[0] == True and tp[4] == False
 
 
@@ -53,6 +53,7 @@ def test_lmr5():
 
     assert len(loss) == len(pred)
     assert isinstance(loss, torch.Tensor)
+
 
 def test_compute_loss():
     nan = float('nan')

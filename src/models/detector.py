@@ -35,7 +35,7 @@ class Detector(nn.Module):
         Arguments:
             n_filter {list} -- number of filter for each conv block
             activ {nn.Module} -- activation function to be used
-             
+
         Returns:
             feature extraction module 
         """
