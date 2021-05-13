@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
-from src.models.mish import Mish
-from src.CUDA.ORN.orn.modules import ORConv2d
 from src.CUDA.ORN.orn.functions import oraligned1d
+from src.CUDA.ORN.orn.modules import ORConv2d
+from src.models.mish import Mish
 
 
 class Detector_ORN(nn.Module):
     """Incomplete implementation of Oriented Response Networks, runs only on gpu
-    Implicitly learns orientation of objects using ARF(Active Rotation Filters) 
+    Implicitly learns orientation of objects using ARF(Active Rotation Filters)
     Advatages - better IOU, fewer parameters, faster convergence, should be ideal for the task
     ORN paper - https://arxiv.org/pdf/1701.01833.pdf
     """
@@ -24,18 +24,18 @@ class Detector_ORN(nn.Module):
         self.n_orientation = 8
 
         self.features = self._build_features(
-            self.n_filters, self.activ, self.n_orientation)
+            self.n_filters, self.activ, self.n_orientation
+        )
 
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(self.n_filters[-1], 1))
+        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(self.n_filters[-1], 1))
 
         self.regressor = nn.Sequential(
             nn.Flatten(),
             nn.Linear(self.n_filters[-1], self.n_filters[-1]),
             self.activ,
             nn.Dropout(),
-            nn.Linear(self.n_filters[-1], 5))
+            nn.Linear(self.n_filters[-1], 5),
+        )
 
     def _build_features(self, n_filter, activ, n_orientation):
         """Generate feature/backbone network
@@ -46,7 +46,7 @@ class Detector_ORN(nn.Module):
             n_orientations {int} -- orientations for ARF
 
         Returns:
-            feature extraction module 
+            feature extraction module
         """
         layers = nn.ModuleList()
         i_channels = 1
@@ -58,8 +58,17 @@ class Detector_ORN(nn.Module):
             else:
                 arf_config_ = n_orientation
 
-            layers.append(ORConv2d(i_channels, o_channels, arf_config=arf_config_,
-                                   kernel_size=3, stride=1, padding=1, bias=False))
+            layers.append(
+                ORConv2d(
+                    i_channels,
+                    o_channels,
+                    arf_config=arf_config_,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            )
 
             if i != n_filter[-1]:  # mimicing the paper
                 layers.append(nn.BatchNorm2d(num_features=o_channels))

@@ -1,11 +1,24 @@
-from src.rotated_ship_data import score_iou
-import torch
-from metrics import compute_metrics
-from loss import compute_loss
 import gc
+from argparse import Namespace
+
+import torch
+from torch.nn.modules.module import Module
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
+
+from src.callbacks.base import CallbackList
+from src.loss import compute_loss
+from src.metrics import compute_metrics
+from src.rotated_ship_data import score_iou
 
 
-def training_epoch(cb, opt, model, train_loader, optimizer):
+def training_epoch(
+    cb: CallbackList,
+    opt: Namespace,
+    model: Module,
+    train_loader: DataLoader,
+    optimizer: Optimizer,
+) -> None:
     """logic for each training epoch"""
     model.train()
 
@@ -16,7 +29,7 @@ def training_epoch(cb, opt, model, train_loader, optimizer):
         optimizer.zero_grad()
 
         # training step
-        input, target = batch['input'], batch['target']
+        input, target = batch["input"], batch["target"]
         output = model(input)
         loss, _l_ship, _l_bbox = compute_loss(output, target)
         loss = loss.mean()
@@ -24,17 +37,27 @@ def training_epoch(cb, opt, model, train_loader, optimizer):
         optimizer.step()
 
         # required info for - logging cb
-        cb.on_train_batch_end(opt=opt,
-                              batch_idx=batch_idx, batch=batch,
-                              dataloader=train_loader, output=loss.item(),
-                              l_ship=_l_ship.mean().item(), l_bbox=_l_bbox.mean().item())
+        cb.on_train_batch_end(
+            opt=opt,
+            batch_idx=batch_idx,
+            batch=batch,
+            dataloader=train_loader,
+            output=loss.item(),
+            l_ship=_l_ship.mean().item(),
+            l_bbox=_l_bbox.mean().item(),
+        )
 
         del loss
         del batch
         gc.collect()
 
 
-def validation_epoch(cb, opt, model, val_loader):
+def validation_epoch(
+    cb: CallbackList,
+    opt: Namespace,
+    model: Module,
+    val_loader: DataLoader,
+) -> torch.Tensor:
     """logic for each validation epoch"""
     model.eval()
 
@@ -54,7 +77,7 @@ def validation_epoch(cb, opt, model, val_loader):
                 batch[key] = batch[key].to(opt.device)
 
             # validation step
-            input, target = batch['input'], batch['target']
+            input, target = batch["input"], batch["target"]
             output = model(input)
 
             loss, _l_ship, _l_bbox = compute_loss(output, target)
@@ -76,10 +99,11 @@ def validation_epoch(cb, opt, model, val_loader):
 
     metrics = {}
     for k, m in zip(["prec", "rec", "f1", "ap", "iou"], [prec, rec, f1, ap, iou]):
-        m = sum(m)/len(m)
+        m = sum(m) / len(m)
         metrics[k] = m
 
-    cb.on_validation_end(opt=opt, output=loss_avg, metrics=metrics,
-                         l_ship=l_ship, l_bbox=l_bbox)
+    cb.on_validation_end(
+        opt=opt, output=loss_avg, metrics=metrics, l_ship=l_ship, l_bbox=l_bbox
+    )
 
     return loss_avg

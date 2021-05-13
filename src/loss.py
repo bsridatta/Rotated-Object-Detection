@@ -1,7 +1,10 @@
+from typing import Tuple
+
 import torch
+from torch import Tensor
 
 
-def compute_loss(pred, target):
+def compute_loss(pred: Tensor, target: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
     """Compute loss handling no ships
 
     Arguments:
@@ -21,19 +24,20 @@ def compute_loss(pred, target):
     l_bbox[idx_no_ship] = 0
 
     l_ship = torch.nn.functional.binary_cross_entropy_with_logits(
-        pred[:, 0], target[:, 0], reduction='none')
+        pred[:, 0], target[:, 0], reduction="none"
+    )
 
     loss = l_ship + l_bbox
 
     return loss, l_ship, l_bbox
 
 
-def lmr5p(pred, target):
+def lmr5p(pred: Tensor, target: Tensor) -> Tensor:
     """5 parameter modulated rotation loss
 
     Arguments:
         pred {Tensor Batch} -- x, y, yaw, w, h
-        target {Tensor Batch} -- x, y, yaw, w, h  
+        target {Tensor Batch} -- x, y, yaw, w, h
 
         * X and Y position (centre of the bounding box)
         * Yaw (direction of heading)
@@ -55,12 +59,14 @@ def lmr5p(pred, target):
     h1, h2 = pred[:, 4], target[:, 4]
 
     # center point loss
-    lcp = torch.abs(x1-x2) + torch.abs(y1-y2)
+    lcp = torch.abs(x1 - x2) + torch.abs(y1 - y2)
 
     lmr5p_ = torch.min(
-        lcp + torch.abs(w1-w2) + torch.abs(h1-h2) + torch.abs(yaw1-yaw2),
-        lcp + torch.abs(w1-h2) + torch.abs(h1-w2) +
-        torch.abs(90 - torch.abs(yaw1-yaw2))
+        lcp + torch.abs(w1 - w2) + torch.abs(h1 - h2) + torch.abs(yaw1 - yaw2),
+        lcp
+        + torch.abs(w1 - h2)
+        + torch.abs(h1 - w2)
+        + torch.abs(90 - torch.abs(yaw1 - yaw2)),
     )
 
     return lmr5p_

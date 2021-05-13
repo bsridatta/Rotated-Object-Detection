@@ -1,15 +1,15 @@
 import atexit
+import gc
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 import numpy as np
 import torch
-import gc
 
-import models
 import src.dataloader as loader
-from src.callbacks import CallbackList, ModelCheckpoint, Logging
-from trainer import training_epoch, validation_epoch
+import src.models as models
+from src.callbacks import CallbackList, Logging, ModelCheckpoint
+from src.trainer import training_epoch, validation_epoch
 
 
 def main():
@@ -18,16 +18,16 @@ def main():
 
     train_loader = loader.train_dataloader(opt)
     val_loader = loader.val_dataloader(opt)
-    test_loader = loader.test_dataloader(opt)
 
     model = models.Detector_FPN()
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', verbose=True)
+        optimizer, mode="min", verbose=True
+    )
 
     # data parallel
     if torch.cuda.device_count() > 1:
-        print(f'[INFO]: Using {torch.cuda.device_count()} GPUs')
+        print(f"[INFO]: Using {torch.cuda.device_count()} GPUs")
         model = torch.nn.DataParallel(model)
 
     model.to(opt.device)
@@ -39,15 +39,16 @@ def main():
     cb.setup(opt=opt, model=model, optimizer=optimizer)
 
     # Train and Val
-    for epoch in range(1, opt.epochs+1):
+    for epoch in range(1, opt.epochs + 1):
         opt.epoch = epoch
         training_epoch(cb, opt, model, train_loader, optimizer)
         val_loss = validation_epoch(cb, opt, model, val_loader)
         scheduler.step(val_loss)
 
         # required info for - checkpoint cb
-        cb.on_epoch_end(opt=opt, val_loss=val_loss,
-                        model=model, optimizer=optimizer, epoch=epoch)
+        cb.on_epoch_end(
+            opt=opt, val_loss=val_loss, model=model, optimizer=optimizer, epoch=epoch
+        )
 
         del val_loss
         gc.collect()
@@ -75,17 +76,20 @@ def _do_setup():
     opt.run_name = "runX"
 
     # wandb for experiment monitoring
-    os.environ['WANDB_NOTES'] = 'test'
+    os.environ["WANDB_NOTES"] = "test"
     if opt.use_wandb:
         import wandb
+
         if not use_cuda:
             # os.environ['WANDB_MODE'] = 'dryrun'  # ignore when debugging on cpu
-            os.environ['WANDB_TAGS'] = 'CPU'
-            wandb.init(anonymous='allow',
-                       project="rotated-object-detection", config=opt)
+            os.environ["WANDB_TAGS"] = "CPU"
+            wandb.init(
+                anonymous="allow", project="rotated-object-detection", config=opt
+            )
         else:
-            wandb.init(anonymous='allow',
-                       project="rotated-object-detection", config=opt)
+            wandb.init(
+                anonymous="allow", project="rotated-object-detection", config=opt
+            )
 
         opt.logger = wandb
         # opt.logger.run.save()
@@ -95,7 +99,7 @@ def _do_setup():
     return opt
 
 
-def _sync_before_exit(opt, wandb):
+def _sync_before_exit(opt: Namespace, wandb):
     print("[INFO]: Sync wandb before terminating")
     opt.logger = None  # wandb cant have objects in its config
     wandb.config.update(opt)
@@ -104,34 +108,36 @@ def _sync_before_exit(opt, wandb):
 def _get_argparser():
 
     parser = ArgumentParser()
+    # fmt: off
     # training specific
-    parser.add_argument('--epochs', default=150, type=int,
-                        help='number of epochs to train')
-    parser.add_argument('--batch_size', default=256, type=int,
-                        help='number of samples per step, have more than one for batch norm')
-    parser.add_argument('--learning_rate', default=1e-3, type=float,
-                        help='learning rate for all optimizers')
-    parser.add_argument('--resume_run', default="None", type=str,
-                        help='auto load ckpt')
+    parser.add_argument("--epochs", default=150, type=int,
+                        help="number of epochs to train")
+    parser.add_argument("--batch_size", default=256, type=int,
+                        help="number of samples per step, have more than one for batch norm")
+    parser.add_argument("--learning_rate", default=1e-3, type=float,
+                        help="learning rate for all optimizers")
+    parser.add_argument("--resume_run", default="None", type=str,
+                        help="auto load ckpt")
     # data
-    parser.add_argument('--train_len', default=32000, type=int,
-                        help='number of samples for training')
-    parser.add_argument('--val_len', default=8000, type=int,
-                        help='number of samples for validation')
-    parser.add_argument('--test_len', default=2, type=int,
-                        help='number of samples for testing')
+    parser.add_argument("--train_len", default=3, type=int,
+                        help="number of samples for training")
+    parser.add_argument("--val_len", default=3, type=int,
+                        help="number of samples for validation")
+    parser.add_argument("--test_len", default=2, type=int,
+                        help="number of samples for testing")
     # output
-    parser.add_argument('--use_wandb', default=False, type=bool,
-                        help='use wandb to monitor training')
-    parser.add_argument('--save_dir', default=f'{os.path.dirname(os.path.abspath(__file__))}/checkpoints', type=str,
-                        help='path to save checkpoints')
+    parser.add_argument("--use_wandb", default=False, type=bool,
+                        help="use wandb to monitor training")
+    parser.add_argument("--save_dir", default=f"{os.path.dirname(os.path.abspath(__file__))}/checkpoints", type=str,
+                        help="path to save checkpoints")
     # device
-    parser.add_argument('--cuda', default=True, type=lambda x: (str(x).lower() == 'true'),
-                        help='enable cuda if available')
-    parser.add_argument('--pin_memory', default=False, type=lambda x: (str(x).lower() == 'true'),
-                        help='pin memory to device')
-    parser.add_argument('--seed', default=400, type=int,
-                        help='random seed')
+    parser.add_argument("--cuda", default=True, type=lambda x: (str(x).lower() == "true"),
+                        help="enable cuda if available")
+    parser.add_argument("--pin_memory", default=False, type=lambda x: (str(x).lower() == "true"),
+                        help="pin memory to device")
+    parser.add_argument("--seed", default=400, type=int, help="random seed")
+    # fmt: on
+
     return parser
 
 

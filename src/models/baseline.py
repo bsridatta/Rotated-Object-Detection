@@ -10,11 +10,9 @@ class Baseline(nn.Module):
     def __init__(self):
         super(Baseline, self).__init__()
         self.image_size = 200
-        self.n_filters = [x*8 for x in [1, 2, 4, 8, 16, 32, 64]]
+        self.n_filters = [x * 8 for x in [1, 2, 4, 8, 16, 32, 64]]
         self.features = self._build_features(self.n_filters)
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(self.n_filters[-1], 5))
+        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(self.n_filters[-1], 5))
 
     def _build_features(self, n_filter):
         """Generate feature/backbone network
@@ -23,15 +21,23 @@ class Baseline(nn.Module):
             n_filter {list} -- number of filter for each conv block
 
         Returns:
-            feature extraction module 
+            feature extraction module
         """
         layers = nn.ModuleList()
 
         i_channels = 1
         for i in n_filter:
             o_channels = i
-            layers.append(nn.Conv2d(i_channels, o_channels,
-                                    kernel_size=3, stride=1, padding=1, bias=False))
+            layers.append(
+                nn.Conv2d(
+                    i_channels,
+                    o_channels,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            )
             layers.append(nn.BatchNorm2d(num_features=o_channels))
             layers.append(nn.ReLU())
             layers.append(nn.MaxPool2d(2))

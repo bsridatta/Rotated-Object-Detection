@@ -6,5 +6,5 @@ setuptools.setup(
     author="Sri Datta Budaraju",
     author_email="b.sridatta@gmail.com",
     packages=setuptools.find_packages(),
-    python_requires='>=3.6'
+    python_requires=">=3.6",
 )

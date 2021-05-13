@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
-from src.models.mish import Mish
 import torch.nn.functional as F
+
+from .mish import Mish
 
 
 class ConvBlock(nn.Module):
     """Similar to the building block in ResNet https://arxiv.org/abs/1512.03385
-    2*conv+bn layers with residual connection. 
-    Represents each 'stage' from which feature pyramid is build  
+    2*conv+bn layers with residual connection.
+    Represents each 'stage' from which feature pyramid is build
 
     Arguments:
         i_channels {int} -- input channels to the block
@@ -20,20 +21,26 @@ class ConvBlock(nn.Module):
 
     def __init__(self, i_channels, o_channels, stride=2, padding=1):
         super(ConvBlock, self).__init__()
-        self.conv1 = nn.Conv2d(i_channels, o_channels,
-                               kernel_size=3, stride=stride, padding=padding, bias=False)
+        self.conv1 = nn.Conv2d(
+            i_channels,
+            o_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=padding,
+            bias=False,
+        )
         self.bn1 = nn.BatchNorm2d(num_features=o_channels)
         self.activ = Mish()
-        self.conv2 = nn.Conv2d(o_channels, o_channels,
-                               kernel_size=3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(
+            o_channels, o_channels, kernel_size=3, padding=1, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(num_features=o_channels)
 
         self.downsample = None
         if stride != 1:
             self.downsample = nn.Sequential(
-                nn.Conv2d(i_channels, o_channels, kernel_size=1,
-                          stride=2, bias=False),
-                nn.BatchNorm2d(o_channels)
+                nn.Conv2d(i_channels, o_channels, kernel_size=1, stride=2, bias=False),
+                nn.BatchNorm2d(o_channels),
             )
 
     def forward(self, x):
@@ -55,7 +62,7 @@ class Detector_FPN(nn.Module):
     """ResNet(18) inspired architecture with Feature Pyramid Network
     Classification from the top of the pyramid and reg. from bottom
 
-    References: 
+    References:
         FPN for Object Detection - https://arxiv.org/pdf/1612.03144.pdf
     Code References:
         https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
@@ -75,12 +82,10 @@ class Detector_FPN(nn.Module):
         # Extremely important to not have bigger stride in the top layers
         # intuition is to have precise information of the ship vertices
         self.conv_c1 = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=3,
-                      stride=1, padding=1, bias=False),
+            nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(8),
             nn.MaxPool2d(2),
-            nn.Conv2d(8, filters[0], kernel_size=3,
-                      stride=1, padding=1, bias=False),
+            nn.Conv2d(8, filters[0], kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(filters[0]),
             nn.MaxPool2d(2),
         )
@@ -105,12 +110,9 @@ class Detector_FPN(nn.Module):
         self.conv_c4_red = nn.Conv2d(filters[3], py_chs, kernel_size=1)
 
         # smooth pyramid levels to reduce aliasing effect from upsampling
-        self.conv_p2_smooth = nn.Conv2d(
-            py_chs, py_chs, kernel_size=3, padding=1)
-        self.conv_p3_smooth = nn.Conv2d(
-            py_chs, py_chs, kernel_size=3, padding=1)
-        self.conv_p4_smooth = nn.Conv2d(
-            py_chs, py_chs, kernel_size=3, padding=1)
+        self.conv_p2_smooth = nn.Conv2d(py_chs, py_chs, kernel_size=3, padding=1)
+        self.conv_p3_smooth = nn.Conv2d(py_chs, py_chs, kernel_size=3, padding=1)
+        self.conv_p4_smooth = nn.Conv2d(py_chs, py_chs, kernel_size=3, padding=1)
 
         # average pooling to flatten features for cls. and reg. heads
         self.avg_pooling = nn.AdaptiveAvgPool2d((1, 1))
@@ -134,7 +136,7 @@ class Detector_FPN(nn.Module):
             nn.Flatten(),
             # nn.Linear(py_chs, py_chs),
             # self.activ,
-            nn.Linear(py_chs, 5)
+            nn.Linear(py_chs, 5),
         )
 
     def forward(self, x):
@@ -178,14 +180,14 @@ class Detector_FPN(nn.Module):
         """takes a pyramid layer, upsamples by factor of 2 and adds corres. lateral connections
 
         Arguments:
-            p_prev {tensor} -- coarser feature map 
+            p_prev {tensor} -- coarser feature map
             lc {tensor} -- lateral connection
 
         Returns:
             finer feature map, lower pyramid layer
         """
-        p = F.interpolate(p_prev, size=(lc.shape[-2:]), mode='nearest')
-        return p+lc
+        p = F.interpolate(p_prev, size=(lc.shape[-2:]), mode="nearest")
+        return p + lc
 
 
 # Run file to see summary

@@ -1,8 +1,12 @@
-from torch.utils.data import Dataset
-from src.rotated_ship_data import make_data
-import torch
+from typing import Dict
+
 import numpy as np
+import torch
+from torch.functional import Tensor
+from torch.utils.data import Dataset
 from tqdm import tqdm
+
+from src.rotated_ship_data import make_data
 
 
 class Ships(Dataset):
@@ -15,7 +19,7 @@ class Ships(Dataset):
         sample {Tenosr} -- p_ship, x, y, yaw, h, w
     """
 
-    def __init__(self, n_samples=1000, pre_load=False):
+    def __init__(self, n_samples: int = 1000, pre_load: bool = False):
         self.n_samples = n_samples
         self.pre_load = pre_load
         if pre_load:
@@ -32,7 +36,7 @@ class Ships(Dataset):
     def __len__(self):
         return self.n_samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
         if self.pre_load:
             inp = self.inps[idx]
             target = self.targets[idx]
@@ -52,10 +56,11 @@ class Ships(Dataset):
 
         return sample
 
+
 # Used for simple experiment
 
 
-def make_batch(batch_size):
+def make_batch(batch_size: int):
     """Used only when pre_load = True
 
     Arguments:

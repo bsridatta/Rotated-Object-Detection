@@ -1,10 +1,19 @@
-import torch
-from src.rotated_ship_data import _make_box_pts
-from shapely.geometry import Polygon
+from typing import List, Tuple
+
 import numpy as np
+import torch
+from shapely.geometry import Polygon
+from torch.tensor import Tensor
+
+from src.rotated_ship_data import _make_box_pts
 
 
-def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
+def compute_metrics(
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    iou_threshold: float = 0.7,
+    pr_score: float = 0.5,
+) -> Tuple[Tensor, Tensor, Tensor, float, Tensor]:
     """Compute IOU, AP, Precision, Recall, F1 score
 
     Arguments:
@@ -18,7 +27,7 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     Returns:
         precision, recall, F1 @ pr_score, AP@ iou_threshold and mean IOU
 
-    Reference: 
+    Reference:
         https://github.com/ultralytics/yolov3/blob/e0a5a6b411cca45f0d64aa932abffbf3c99b92b3/test.py
     """
     pred = pred.detach()
@@ -50,7 +59,7 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     tp = tp * 1.0  # boolean to float
     # TP, FP Cummulative
     tpc = torch.cumsum(tp, dim=0)
-    fpc = torch.cumsum(1-tp, dim=0)
+    fpc = torch.cumsum(1 - tp, dim=0)
 
     # TP + FN = N(Target=1) constant
     eps = 1e-20
@@ -70,13 +79,13 @@ def compute_metrics(pred, target, iou_threshold=0.7, pr_score=0.5):
     return p, r, f1, ap, mean_iou
 
 
-def compute_ap(recall, precision):
-    """ Compute the average precision, given the recall and precision curves.
+def compute_ap(recall: List[Tensor], precision: List[Tensor]) -> float:
+    """Compute the average precision, given the recall and precision curves.
 
-    Code Source: 
+    Code Source:
         unmodified - https://github.com/rbgirshick/py-faster-rcnn.
 
-    Reference: 
+    Reference:
         https://github.com/ultralytics/yolov3/blob/e0a5a6b411cca45f0d64aa932abffbf3c99b92b3/test.py
 
     # Arguments
@@ -87,16 +96,17 @@ def compute_ap(recall, precision):
     """
 
     # Append sentinel values to beginning and end
-    mrec = np.concatenate(
-        ([0.], recall, [min(recall[-1] + 1E-3, 1.)])).astype('float')
-    mpre = np.concatenate(([0.], precision, [0.]))
+    mrec = np.concatenate(([0.0], recall, [min(recall[-1] + 1e-3, 1.0)])).astype(
+        "float"
+    )
+    mpre = np.concatenate(([0.0], precision, [0.0]))
 
     # Compute the precision envelope
-    mpre = np.flip(np.maximum.accumulate(np.flip(mpre))).astype('float')
+    mpre = np.flip(np.maximum.accumulate(np.flip(mpre))).astype("float")
 
     # Integrate area under curve
-    method = 'interp'  # methods: 'continuous', 'interp'
-    if method == 'interp':
+    method = "interp"  # methods: 'continuous', 'interp'
+    if method == "interp":
         x = np.linspace(0, 1, 101)  # 101-point interp (COCO)
         ap = np.trapz(np.interp(x, mrec, mpre), x)  # integrate
     else:  # 'continuous'

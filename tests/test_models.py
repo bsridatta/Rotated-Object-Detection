@@ -1,6 +1,6 @@
 import pytest
+import src.models as models
 import torch
-from src import models
 
 
 @pytest.fixture

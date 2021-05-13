@@ -1,7 +1,8 @@
-'''
+"""
+
 Callback inspritations from PyTorch Lightning - https://github.com/PyTorchLightning/PyTorch-Lightning
 and https://github.com/devforfu/pytorch_playground/blob/master/loop.ipynb
-'''
+"""
 
 import abc
 
@@ -73,7 +74,6 @@ class Callback(abc.ABC):
 
 
 class CallbackList(Callback):
-
     def __init__(self, callbacks):
         self.callbacks = callbacks
 
